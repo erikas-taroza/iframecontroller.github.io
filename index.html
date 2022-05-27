@@ -53,6 +53,8 @@
                 }
                 else if(iframe == "sc") {
                     widget.getPosition(function(pos) {
+                        console.log(pos);
+                        console.log(typeof(pos));
                         position = (pos / 1000).toFixed();
                     });
                 }
@@ -143,6 +145,8 @@
                         },
                     });
                 }
+                setVolume(savedVolume);
+                mute(isMuted);
             }
         </script>
 
