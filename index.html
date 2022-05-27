@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <!--Common functions-->
+        <script>
+            var timer;
+            var duration = 0;
+            var isMuted = false;
+            var savedVolume = 1;
+            var platform = "";
+
+            function init(p) {
+                platform = p;
+            }
+
+            // Used to post messages to a separate project that uses a webview.
+            function postMessage(obj, name, message) {
+                if(platform == "desktop") {
+                    window.chrome.webview.postMessage({name: message});
+                }
+                else if(platform == "mobile") {
+                    obj.postMessage(message);
+                }
+            }
+
+            function sendPosition(iframe) {
+                var position;
+
+                if(iframe == "yt") {
+                    position = player.getCurrentTime().toFixed();
+                }
+                else if(iframe == "sc") {
+                    widget.getPosition(function(pos) {
+                        position = (pos / 1000).toFixed();
+                    });
+                }
+
+                postMessage(onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
+            }
+
+            function play(iframe) {
+                if(iframe == "yt") {
+                    player.playVideo();
+                }
+                else if(iframe == "sc") {
+                    widget.play();
+                }
+            }
+
+            function pause(iframe) {
+                if(iframe == "yt") {
+                    player.pauseVideo();
+                    sendPosition("yt");
+                }
+                else if(iframe == "sc") {
+                    widget.pause();
+                    sendPosition("sc");
+                }
+            }
+
+            function mute(mute) {
+                if(mute) {
+                    player.mute();
+                    widget.setVolume(0);
+                    // if(iframe == "yt") {
+                    //     player.mute();
+                    // }
+                    // else if(iframe == "sc") {
+                    //     widget.setVolume(0);
+                    // }
+                }
+                else {
+                    player.unMute();
+                    widget.setVolume(parseInt(37 * savedVolume));
+                    // if(iframe == "yt") {
+                    //     player.unMute();
+                    // }
+                    // else if(iframe == "sc") {
+                    //     widget.setVolume(parseInt(37 * savedVolume));
+                    // }
+                }
+
+                isMuted = mute;
+            }
+
+            function setVolume(volume) {
+                player.setVolume(parseInt(75 * volume));
+                widget.setVolume(parseInt(37 * volume));
+                // if(iframe == "yt") {
+                //     player.setVolume(parseInt(75 * volume));
+                // }
+                // else if(iframe == "sc") {
+                //     widget.setVolume(parseInt(37 * volume));
+                // }
+
+                savedVolume = volume;
+            }
+
+            function seek(iframe, seconds) {
+                if(iframe == "yt") {
+                    player.seekTo(seconds, true);
+                }
+                else if(iframe == "sc") {
+                    widget.seekTo(seconds * 1000);
+                }
+            }
+
+            function changeSong(iframe, id) {
+                clearInterval(timer);
+                pause("yt");
+                pause("sc");
+                
+                if(iframe == "yt") {
+                    player.loadVideoById(id, 0);
+                }
+                else if(iframe == "sc") {
+                    widget.load("https://api.soundcloud.com/tracks/" + id + "&show_teaser=false", {
+                        callback: function() {
+                            play("sc");
+                        },
+                    });
+                }
+            }
+        </script>
+
+        <!--YouTube's IFrame-->
+        <div id="yt"></div>
+        <script src="https://www.youtube.com/iframe_api"></script>
+        <script>
+            var player;
+
+            function onYouTubeIframeAPIReady() {
+                player = new YT.Player("yt", {
+                    width: "100%",
+                    height: "300",
+                    playerVars: {
+                        "playsinline": 1,
+                        "controls": 0,
+                        "rel": 0,
+                        "disablekb": 1
+                    },
+                    events: {
+                        "onReady": onReady,
+                        "onStateChange": onPlayerStateChange
+                    }
+                });
+            }
+
+            function onReady(event) { postMessage(onPlayerReady, "onPlayerReady", ""); }
+            
+            function onPlayerStateChange(event) {
+                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
+
+                if(event.data == YT.PlayerState.PLAYING) {
+                    duration = player.getDuration();
+
+                    // Update the progress state every second.
+                    timer = setInterval(function() { sendPosition("yt"); }, 1000)
+                }
+                else { clearInterval(timer); }
+            }
+            
+        </script>
+
+        <!--SoundCloud's IFrame-->
+        <iframe id="sc" src="https://w.soundcloud.com/player/?url=https://api.soundcloud.com/tracks/&show_teaser=false" width="100%" height="300" allow="autoplay"></iframe>
+        <script src="https://w.soundcloud.com/player/api.js"></script>
+        <script>
+            var isPlaying = false;
+
+            widget = SC.Widget(document.getElementById("sc"));
+
+            widget.bind(SC.Widget.Events.READY, function() 
+            { postMessage(onPlayerReady, "onPlayerReady", ""); });
+
+            widget.bind(SC.Widget.Events.FINISH, function() {
+                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
+                clearInterval(timer);
+                isPlaying = false;
+            });
+
+            widget.bind(SC.Widget.Events.PLAY, function() {
+                if(isPlaying) return;
+
+                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
+
+                widget.getDuration(function(d) { duration = d / 1000; });
+                timer = setInterval(function() { sendPosition("sc"); }, 1000);
+                isPlaying = true;
+            });
+
+            widget.bind(SC.Widget.Events.PAUSE, function() {
+                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
+                clearInterval(timer);
+                sendPosition("sc");
+                isPlaying = false;
+            });
+
+            widget.bind(SC.Widget.Events.LOAD_PROGRESS, function() {
+                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
+                clearInterval(timer);
+                isPlaying = false;
+            });
+        </script>
+    </body>
+</html>
