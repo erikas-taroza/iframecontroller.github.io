@@ -16,7 +16,7 @@
             // Used to post messages to a separate project that uses a webview.
             function postMessage(obj, name, message) {
                 if(platform == "desktop") {
-                    window.chrome.webview.postMessage({name: message});
+                    window.chrome.webview.postMessage({"${name}": message});
                 }
                 else if(platform == "mobile") {
                     obj.postMessage(message);
