@@ -35,7 +35,7 @@
                     });
                 }
 
-                postMessage(onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
+                postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
             }
 
             function play(iframe) {
@@ -146,10 +146,10 @@
                 });
             }
 
-            function onReady(event) { postMessage(onPlayerReady, "onPlayerReady", ""); }
+            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", ""); }
             
             function onPlayerStateChange(event) {
-                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
+                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
 
                 if(event.data == YT.PlayerState.PLAYING) {
                     duration = player.getDuration();
@@ -171,10 +171,10 @@
             widget = SC.Widget(document.getElementById("sc"));
 
             widget.bind(SC.Widget.Events.READY, function() 
-            { postMessage(onPlayerReady, "onPlayerReady", ""); });
+            { postMessage(window.onPlayerReady, "onPlayerReady", ""); });
 
             widget.bind(SC.Widget.Events.FINISH, function() {
-                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
+                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
                 clearInterval(timer);
                 isPlaying = false;
             });
@@ -182,7 +182,7 @@
             widget.bind(SC.Widget.Events.PLAY, function() {
                 if(isPlaying) return;
 
-                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
+                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
 
                 widget.getDuration(function(d) { duration = d / 1000; });
                 timer = setInterval(function() { sendPosition("sc"); }, 1000);
@@ -190,14 +190,14 @@
             });
 
             widget.bind(SC.Widget.Events.PAUSE, function() {
-                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
+                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
                 clearInterval(timer);
                 sendPosition("sc");
                 isPlaying = false;
             });
 
             widget.bind(SC.Widget.Events.LOAD_PROGRESS, function() {
-                postMessage(onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
+                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
                 clearInterval(timer);
                 isPlaying = false;
             });
