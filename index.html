@@ -1,26 +1,48 @@
 <!DOCTYPE html>
 <html>
     <body>
+        <a id="ready">false</a>
+        <a id="playbackState">0</a>
+        <a id="progress">0,0</a>
         <!--Common functions-->
         <script>
             var timer;
             var duration = 0;
             var isMuted = false;
             var savedVolume = 1;
-            var platform = "";
+            var isYoutubeReady = false;
+            var isSoundcloudReady = false;
+            // var platform = "";
 
-            function init(p) {
-                platform = p;
-            }
+            // function init(p) {
+            //     platform = p;
+            // }
 
             // Used to post messages to a separate project that uses a webview.
-            function postMessage(obj, name, message) {
-                if(platform == "desktop") {
-                    window.chrome.webview.postMessage({"${name}": message});
+            // function postMessage(obj, name, message) {
+            //     if(platform == "desktop") {
+            //         window.chrome.webview.postMessage({"${name}": message});
+            //     }
+            //     else if(platform == "mobile") {
+            //         obj.postMessage(message);
+            //     }
+            // }
+
+            function setReady(iframe) {
+                if(iframe == "yt") {
+                    isYoutubeReady = true;
                 }
-                else if(platform == "mobile") {
-                    obj.postMessage(message);
+                else if(iframe == "sc") {
+                    isSoundcloudReady = true;
                 }
+
+                if(isYoutubeReady && isSoundcloudReady) {
+                    document.getElementById("ready").innerHTML = "true";
+                }
+            }
+
+            function setPlaybackState(id) {
+                document.getElementById("playbackState").innerHTML = id.toString();
             }
 
             function sendPosition(iframe) {
@@ -34,8 +56,9 @@
                         position = (pos / 1000).toFixed();
                     });
                 }
-
-                postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
+                
+                document.getElementById("progress").innerHTML = position + "," + duration;
+                //postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
             }
 
             function play(iframe) {
@@ -146,10 +169,11 @@
                 });
             }
 
-            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", ""); }
+            function onReady(event) { setReady("yt"); }//postMessage(window.onPlayerReady, "onPlayerReady", ""); }
             
             function onPlayerStateChange(event) {
-                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
+                setPlaybackState(event.data + 1);
+                //postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
 
                 if(event.data == YT.PlayerState.PLAYING) {
                     duration = player.getDuration();
@@ -171,10 +195,14 @@
             widget = SC.Widget(document.getElementById("sc"));
 
             widget.bind(SC.Widget.Events.READY, function() 
-            { postMessage(window.onPlayerReady, "onPlayerReady", ""); });
+            { 
+                //postMessage(window.onPlayerReady, "onPlayerReady", ""); 
+                setReady("sc");
+            });
 
             widget.bind(SC.Widget.Events.FINISH, function() {
-                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
+                setPlaybackState(1);
+                //postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
                 clearInterval(timer);
                 isPlaying = false;
             });
@@ -182,7 +210,8 @@
             widget.bind(SC.Widget.Events.PLAY, function() {
                 if(isPlaying) return;
 
-                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
+                setPlaybackState(2);
+                //postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
 
                 widget.getDuration(function(d) { duration = d / 1000; });
                 timer = setInterval(function() { sendPosition("sc"); }, 1000);
@@ -190,14 +219,16 @@
             });
 
             widget.bind(SC.Widget.Events.PAUSE, function() {
-                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
+                setPlaybackState(3);
+                //postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
                 clearInterval(timer);
                 sendPosition("sc");
                 isPlaying = false;
             });
 
             widget.bind(SC.Widget.Events.LOAD_PROGRESS, function() {
-                postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
+                setPlaybackState(4);
+                //postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
                 clearInterval(timer);
                 isPlaying = false;
             });
