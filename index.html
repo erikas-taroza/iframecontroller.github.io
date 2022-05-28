@@ -7,7 +7,7 @@
             var duration = 0;
             var isMuted = false;
             var savedVolume = 1;
-            var platform = "";
+            var platform = "desktop";
 
             function init(p) {
                 platform = p;
@@ -15,7 +15,6 @@
 
             // Used to post messages to a separate project that uses a webview.
             function postMessage(obj, name, message) {
-                while(platform == "") continue;
 
                 if(platform == "desktop") {
                     window.chrome.webview.postMessage({"key": name, "message": message});
