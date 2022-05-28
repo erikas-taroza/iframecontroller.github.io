@@ -87,8 +87,8 @@
 
             function changeSong(iframe, id) {
                 clearInterval(timer);
-                pause("yt");
-                pause("sc");
+                player.pauseVideo();
+                widget.pause();
                 
                 if(iframe == "yt") {
                     player.loadVideoById(id, 0);
@@ -137,7 +137,7 @@
 
                 if(event.data == YT.PlayerState.PLAYING) {
                     duration = player.getDuration();
-
+                    sendPosition("sc");
                     // Update the progress state every second.
                     timer = setInterval(function() { sendPosition("yt"); }, 1000)
                 }
@@ -170,6 +170,8 @@
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
 
                 widget.getDuration(function(d) { duration = d / 1000; });
+                sendPosition("sc");
+                // Update the progress state every second.
                 timer = setInterval(function() { sendPosition("sc"); }, 1000);
                 isPlaying = true;
             });
