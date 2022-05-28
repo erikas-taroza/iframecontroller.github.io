@@ -188,7 +188,6 @@
             widget.bind(SC.Widget.Events.PAUSE, function() {
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
                 clearInterval(timer);
-                sendPosition("sc");
                 isPlaying = false;
             });
 
