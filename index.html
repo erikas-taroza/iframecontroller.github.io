@@ -1,17 +1,12 @@
 <!DOCTYPE html>
 <html>
     <body>
-        <a id="ready">false</a>
-        <a id="playbackState">0</a>
-        <a id="progress">0,0</a>
         <!--Common functions-->
         <script>
             var timer;
             var duration = 0;
             var isMuted = false;
             var savedVolume = 1;
-            var isYoutubeReady = false;
-            var isSoundcloudReady = false;
             var platform = "";
 
             function init(p) {
@@ -28,41 +23,18 @@
                 }
             }
 
-            function setReady(iframe) {
-                if(iframe == "yt") {
-                    isYoutubeReady = true;
-                }
-                else if(iframe == "sc") {
-                    isSoundcloudReady = true;
-                }
-
-                if(isYoutubeReady && isSoundcloudReady) {
-                    document.getElementById("ready").innerHTML = "true";
-                }
-            }
-
-            function setPlaybackState(id) {
-                document.getElementById("playbackState").innerHTML = id.toString();
-            }
-
             function sendPosition(iframe) {
-                var position;
 
                 if(iframe == "yt") {
-                    position = player.getCurrentTime().toFixed();
+                    var position = player.getCurrentTime().toFixed();
+                    postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration);
                 }
                 else if(iframe == "sc") {
                     widget.getPosition(function(pos) {
-                        console.log(pos);
-                        console.log(typeof(pos));
-                        position = (pos / 1000).toFixed();
-                        console.log(position);
-                        console.log(typeof(position));
+                        var position = (pos / 1000).toFixed();
+                        postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration);
                     });
                 }
-                
-                document.getElementById("progress").innerHTML = `${position},${duration}`;
-                postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration)
             }
 
             function play(iframe) {
@@ -158,10 +130,9 @@
                 });
             }
 
-            function onReady(event) { setReady("yt"); postMessage(window.onPlayerReady, "onPlayerReady", ""); }
+            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", ""); }
             
             function onPlayerStateChange(event) {
-                setPlaybackState(event.data + 1);
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
 
                 if(event.data == YT.PlayerState.PLAYING) {
@@ -183,14 +154,11 @@
 
             widget = SC.Widget(document.getElementById("sc"));
 
-            widget.bind(SC.Widget.Events.READY, function() 
-            { 
-                postMessage(window.onPlayerReady, "onPlayerReady", ""); 
-                setReady("sc");
+            widget.bind(SC.Widget.Events.READY, function() { 
+                postMessage(window.onPlayerReady, "onPlayerReady", "");
             });
 
             widget.bind(SC.Widget.Events.FINISH, function() {
-                setPlaybackState(1);
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "1");
                 clearInterval(timer);
                 isPlaying = false;
@@ -199,7 +167,6 @@
             widget.bind(SC.Widget.Events.PLAY, function() {
                 if(isPlaying) return;
 
-                setPlaybackState(2);
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
 
                 widget.getDuration(function(d) { duration = d / 1000; });
@@ -208,7 +175,6 @@
             });
 
             widget.bind(SC.Widget.Events.PAUSE, function() {
-                setPlaybackState(3);
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "3");
                 clearInterval(timer);
                 sendPosition("sc");
@@ -216,7 +182,6 @@
             });
 
             widget.bind(SC.Widget.Events.LOAD_PROGRESS, function() {
-                setPlaybackState(4);
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "4");
                 clearInterval(timer);
                 isPlaying = false;
