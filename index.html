@@ -145,7 +145,7 @@
 
                 if(event.data == YT.PlayerState.PLAYING) {
                     duration = player.getDuration();
-                    sendPosition("sc");
+                    sendPosition("yt");
                     // Update the progress state every second.
                     timer = setInterval(function() { sendPosition("yt"); }, 1000)
                 }
