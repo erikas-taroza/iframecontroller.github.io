@@ -10,6 +10,7 @@
             var youtubeReady = false;
             var soundcloudReady = false;
             var platform = "";
+            var iframe = "";
 
             function init(p) {
                 platform = p;
@@ -29,7 +30,7 @@
                 }
             }
 
-            function sendPosition(iframe) {
+            function sendPosition() {
                 if(iframe == "yt") {
                     var position = player.getCurrentTime().toFixed();
                     postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration);
@@ -42,7 +43,7 @@
                 }
             }
 
-            function play(iframe) {
+            function play() {
                 if(iframe == "yt") {
                     player.playVideo();
                 }
@@ -51,14 +52,14 @@
                 }
             }
 
-            function pause(iframe) {
+            function pause() {
                 if(iframe == "yt") {
                     player.pauseVideo();
-                    sendPosition("yt");
+                    sendPosition();
                 }
                 else if(iframe == "sc") {
                     widget.pause();
-                    sendPosition("sc");
+                    sendPosition();
                 }
             }
 
@@ -81,7 +82,7 @@
                 savedVolume = volume;
             }
 
-            function seek(iframe, seconds) {
+            function seek(seconds) {
                 if(iframe == "yt") {
                     player.seekTo(seconds, true);
                 }
@@ -90,11 +91,12 @@
                 }
             }
 
-            function changeSong(iframe, id) {
+            function changeSong(iframeCode, id) {
                 clearInterval(timer);
                 player.loadVideoById("", 0);
                 widget.load("https://api.soundcloud.com/tracks/&show_teaser=false");
                 
+                iframe = iframeCode;
                 if(iframe == "yt") {
                     player.loadVideoById(id, 0);
                     setVolume(savedVolume);
@@ -105,7 +107,7 @@
                         callback: function() {
                             setVolume(savedVolume);
                             mute(isMuted);
-                            play("sc");
+                            play();
                         },
                     });
                 }
@@ -145,7 +147,7 @@
 
                 if(event.data == YT.PlayerState.PLAYING) {
                     duration = player.getDuration();
-                    sendPosition("yt");
+                    sendPosition();
                     // Update the progress state every second.
                     timer = setInterval(function() { sendPosition("yt"); }, 1000)
                 }
@@ -179,9 +181,9 @@
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", "2");
 
                 widget.getDuration(function(d) { duration = d / 1000; });
-                sendPosition("sc");
+                sendPosition();
                 // Update the progress state every second.
-                timer = setInterval(function() { sendPosition("sc"); }, 1000);
+                timer = setInterval(function() { sendPosition(); }, 1000);
                 isPlaying = true;
             });
 
