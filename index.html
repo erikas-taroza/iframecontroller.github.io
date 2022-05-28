@@ -93,6 +93,7 @@
 
             function changeSong(iframeCode, id) {
                 clearInterval(timer);
+                isPlaying = false;
                 player.loadVideoById("", 0);
                 widget.load("https://api.soundcloud.com/tracks/&show_teaser=false");
                 
