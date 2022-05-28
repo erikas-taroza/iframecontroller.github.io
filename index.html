@@ -92,8 +92,8 @@
 
             function changeSong(iframe, id) {
                 clearInterval(timer);
-                player.pauseVideo();
-                widget.pause();
+                player.loadVideoById("", 0);
+                widget.load("https://api.soundcloud.com/tracks/&show_teaser=false");
                 
                 if(iframe == "yt") {
                     player.loadVideoById(id, 0);
