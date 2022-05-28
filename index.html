@@ -24,7 +24,6 @@
             }
 
             function sendPosition(iframe) {
-
                 if(iframe == "yt") {
                     var position = player.getCurrentTime().toFixed();
                     postMessage(window.onProgressStateUpdate, "onProgressStateUpdate", position + "," + duration);
@@ -130,7 +129,7 @@
                 });
             }
 
-            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", ""); }
+            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", "yt"); }
             
             function onPlayerStateChange(event) {
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
@@ -155,7 +154,7 @@
             widget = SC.Widget(document.getElementById("sc"));
 
             widget.bind(SC.Widget.Events.READY, function() { 
-                postMessage(window.onPlayerReady, "onPlayerReady", "");
+                postMessage(window.onPlayerReady, "onPlayerReady", "sc");
             });
 
             widget.bind(SC.Widget.Events.FINISH, function() {
