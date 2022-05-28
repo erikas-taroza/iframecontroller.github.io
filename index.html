@@ -56,6 +56,7 @@
                         console.log(pos);
                         console.log(typeof(pos));
                         position = (pos / 1000).toFixed();
+                        console.log(position);
                     });
                 }
                 
@@ -137,16 +138,18 @@
                 
                 if(iframe == "yt") {
                     player.loadVideoById(id, 0);
+                    setVolume(savedVolume);
+                    mute(isMuted);
                 }
                 else if(iframe == "sc") {
                     widget.load("https://api.soundcloud.com/tracks/" + id + "&show_teaser=false", {
                         callback: function() {
+                            setVolume(savedVolume);
+                            mute(isMuted);
                             play("sc");
                         },
                     });
                 }
-                setVolume(savedVolume);
-                mute(isMuted);
             }
         </script>
 
