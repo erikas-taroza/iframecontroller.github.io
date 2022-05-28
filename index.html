@@ -7,15 +7,20 @@
             var duration = 0;
             var isMuted = false;
             var savedVolume = 1;
-            var platform = "desktop";
+            var youtubeReady = false;
+            var soundcloudReady = false;
+            var platform = "";
 
             function init(p) {
                 platform = p;
+                if(youtubeReady) { postMessage(window.onPlayerReady, "onPlayerReady", "yt"); }
+                if(soundcloudReady) { postMessage(window.onPlayerReady, "onPlayerReady", "sc"); }
             }
 
             // Used to post messages to a separate project that uses a webview.
             function postMessage(obj, name, message) {
-
+                if(platform == "") return;
+                
                 if(platform == "desktop") {
                     window.chrome.webview.postMessage({"key": name, "message": message});
                 }
@@ -130,7 +135,10 @@
                 });
             }
 
-            function onReady(event) { postMessage(window.onPlayerReady, "onPlayerReady", "yt"); }
+            function onReady(event) { 
+                youtubeReady = true;
+                postMessage(window.onPlayerReady, "onPlayerReady", "yt");
+            }
             
             function onPlayerStateChange(event) {
                 postMessage(window.onPlaybackStateUpdate, "onPlaybackStateUpdate", event.data + 1);
@@ -155,6 +163,7 @@
             widget = SC.Widget(document.getElementById("sc"));
 
             widget.bind(SC.Widget.Events.READY, function() { 
+                soundcloudReady = true;
                 postMessage(window.onPlayerReady, "onPlayerReady", "sc");
             });
 
